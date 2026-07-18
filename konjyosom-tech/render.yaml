@@ -20,7 +20,7 @@ services:
         value: 7d
       - key: FRONTEND_URL
         fromService:
-          name: konjyosom-frontend
+          name: konjyosomtechs
           type: static
           property: url
       - key: ADMIN_EMAIL
@@ -32,7 +32,7 @@ services:
 
   # Frontend Static Site
   - type: static
-    name: konjyosom-frontend
+    name: konjyosomtechs
     runtime: static
     plan: free
     buildCommand: echo "Frontend ready"
