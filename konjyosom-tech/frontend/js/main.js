@@ -136,7 +136,12 @@ function initForm(formId, endpoint, options = {}) {
                 body = new FormData(form);
             } else {
                 const formData = new FormData(form);
-                body = JSON.stringify(Object.fromEntries(formData.entries()));
+                const data = Object.fromEntries(formData.entries());
+                // File objects can't be represented in JSON — drop file inputs
+                Object.keys(data).forEach(key => {
+                    if (data[key] instanceof File) delete data[key];
+                });
+                body = JSON.stringify(data);
                 headers['Content-Type'] = 'application/json';
             }
 
