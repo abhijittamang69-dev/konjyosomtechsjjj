@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completed Jobs - Konjyosom Tech Technician</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+.main-content { margin-left: 260px; min-height: 100vh; background: #f8f9fa; }
+.top-bar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.content-area { padding: 2rem; }
+@media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+</head>
+<body>
+<button class="btn btn-primary position-fixed d-lg-none" style="top: 15px; left: 15px; z-index: 1001;" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
+<div class="dashboard-sidebar position-fixed top-0 start-0 h-100" style="width: 260px; z-index: 1000;">
+<div class="sidebar-brand"><i class="fas fa-tools"></i> Technician</div>
+<ul class="sidebar-nav">
+<li><a href="dashboard.html"><i class="fas fa-clipboard-list"></i> My Jobs</a></li>
+<li><a href="completed.html" class="active"><i class="fas fa-check-circle"></i> Completed</a></li>
+<li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+<li class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);"><a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+</ul>
+</div>
+<div class="main-content">
+<div class="top-bar d-flex justify-content-between align-items-center">
+<h4 class="mb-0 d-none d-lg-block">Completed Jobs</h4>
+<div class="d-flex align-items-center gap-3">
+<span class="text-muted"><i class="fas fa-user me-1"></i> <span id="techName">Technician</span></span>
+<span class="badge bg-info">Technician</span>
+</div>
+</div>
+<div class="content-area">
+<div class="card">
+<div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+<h5 class="mb-0"><i class="fas fa-check-circle me-2 text-success"></i>Completed Jobs History</h5>
+<span class="badge bg-success" id="totalCount">0 total</span>
+</div>
+<div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-hover mb-0">
+<thead class="table-light"><tr><th>WO ID</th><th>Customer</th><th>Service</th><th>Completed</th><th>Report</th></tr></thead>
+<tbody id="completedTable"><tr><td colspan="5" class="text-center py-5 text-muted">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn() || !Auth.isTechnician()) window.location.href = '../login.html';
+const user = Auth.getUser(); if (user) document.getElementById('techName').textContent = user.name;
+document.getElementById('mobileMenuToggle').addEventListener('click', () => { document.querySelector('.dashboard-sidebar').classList.toggle('show'); });
+async function loadCompleted() { try { const response = await Auth.apiCall('/workorders?status=completed'); if (!response) return; const data = await response.json(); if (data.success) { const jobs = data.workOrders || []; document.getElementById('totalCount').textContent = `${jobs.length} total`; const tbody = document.getElementById('completedTable'); if (jobs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>No completed jobs yet</td></tr>'; return; } tbody.innerHTML = jobs.map(job => `<tr><td><span class="fw-bold text-primary">${job.workOrderId}</span></td><td><div class="fw-500">${job.customerName}</div><small class="text-muted">${job.location}</small></td><td>${job.serviceType}</td><td><small>${job.completedAt ? Utils.formatDateTime(job.completedAt) : 'N/A'}</small></td><td>${job.reportUrl ? `<a href="${job.reportUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-pdf me-1"></i> View</a>` : '<span class="text-muted">N/A</span>'}</td></tr>`).join(''); } } catch (error) { console.error('Load completed error:', error); showAlert('danger', 'Failed to load completed jobs'); } }
+loadCompleted();
+</script>
+</body>
+</html>

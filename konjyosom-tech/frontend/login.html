@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Konjyosom Tech Solutions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <style>
+        .login-page { min-height: 100vh; display: flex; align-items: center; background: var(--gradient); position: relative; overflow: hidden; }
+        .login-page::before { content: ''; position: absolute; top: -30%; right: -10%; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .login-page::after { content: ''; position: absolute; bottom: -20%; left: -10%; width: 400px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 50%; }
+        .login-card { background: white; border-radius: 20px; padding: 3rem; box-shadow: 0 25px 80px rgba(0,0,0,0.3); width: 100%; max-width: 450px; position: relative; z-index: 1; }
+        .login-logo { text-align: center; margin-bottom: 2rem; }
+        .login-logo i { font-size: 3.5rem; color: var(--primary); margin-bottom: 1rem; display: block; }
+        .login-logo h3 { font-weight: 700; color: var(--dark); }
+        .login-logo p { color: var(--gray); }
+        .input-group-text { background: #f8f9fa; border: 2px solid #e9ecef; border-right: none; color: var(--gray); }
+        .form-control { border-left: none; }
+        .form-control:focus { border-color: #e9ecef; box-shadow: none; }
+        .input-group:focus-within .input-group-text { border-color: var(--primary); color: var(--primary); }
+        .input-group:focus-within .form-control { border-color: var(--primary); }
+        .btn-login { background: var(--gradient); border: none; color: white; font-weight: 600; padding: 0.875rem; border-radius: 10px; transition: all 0.3s ease; }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(26,82,118,0.3); }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="login-card mx-auto">
+                        <div class="login-logo">
+                            <img src="assets/logo-web.png" alt="Konjyosom Tech" width="180" height="50" class="mb-3">
+                            <h3>Konjyosom Tech</h3>
+                            <p>Service Management System</p>
+                        </div>
+
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-500">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required autofocus>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-500">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()" tabindex="-1">
+                                        <i class="fas fa-eye" id="toggleIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-login w-100 py-3 mb-3">
+                                <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+                            </button>
+                        </form>
+
+                        <div class="text-center">
+                            <a href="index.html" class="text-muted text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Website
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js?v=2"></script>
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('toggleIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    Auth.setToken(result.token);
+                    Auth.setUser(result.user);
+
+                    showAlert('success', 'Login successful! Redirecting...');
+
+                    setTimeout(() => {
+                        if (result.user.needsPasswordChange) {
+                            window.location.href = 'technician/change-password.html';
+                        } else {
+                            window.location.href = result.redirectTo;
+                        }
+                    }, 1000);
+                } else {
+                    showAlert('danger', result.message || 'Invalid email or password');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('danger', 'Connection failed. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

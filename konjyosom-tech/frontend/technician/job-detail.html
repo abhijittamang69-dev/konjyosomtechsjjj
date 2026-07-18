@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Detail - Konjyosom Tech Technician</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+.main-content { margin-left: 260px; min-height: 100vh; background: #f8f9fa; }
+.top-bar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.content-area { padding: 2rem; }
+.signature-pad { border: 2px dashed #dee2e6; border-radius: 10px; cursor: crosshair; background: #fafafa; touch-action: none; }
+.photo-upload { border: 2px dashed #dee2e6; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; background: #fafafa; }
+.photo-upload:hover { border-color: var(--primary); background: #f0f7ff; }
+.status-timeline { display: flex; justify-content: space-between; position: relative; padding: 1rem 0; }
+.status-timeline::before { content: ''; position: absolute; top: 25px; left: 10%; right: 10%; height: 4px; background: #e9ecef; border-radius: 2px; }
+.status-step { text-align: center; position: relative; z-index: 1; }
+.status-step .step-dot { width: 20px; height: 20px; border-radius: 50%; background: #e9ecef; margin: 0 auto 0.5rem; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.status-step.active .step-dot { background: var(--primary); }
+.status-step.completed .step-dot { background: var(--secondary); }
+@media (max-width: 991px) { .main-content { margin-left: 0; } }
+</style>
+</head>
+<body>
+<button class="btn btn-primary position-fixed d-lg-none" style="top: 15px; left: 15px; z-index: 1001;" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
+<div class="dashboard-sidebar position-fixed top-0 start-0 h-100" style="width: 260px; z-index: 1000;">
+<div class="sidebar-brand"><i class="fas fa-tools"></i> Technician</div>
+<ul class="sidebar-nav">
+<li><a href="dashboard.html"><i class="fas fa-clipboard-list"></i> My Jobs</a></li>
+<li><a href="completed.html"><i class="fas fa-check-circle"></i> Completed</a></li>
+<li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+<li class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);"><a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+</ul>
+</div>
+<div class="main-content">
+<div class="top-bar d-flex justify-content-between align-items-center">
+<div class="d-flex align-items-center gap-3">
+<a href="dashboard.html" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+<h4 class="mb-0 d-none d-lg-block">Job Details</h4>
+</div>
+<div class="d-flex align-items-center gap-3">
+<span class="text-muted"><i class="fas fa-user me-1"></i> <span id="techName">Technician</span></span>
+<span class="badge bg-info">Technician</span>
+</div>
+</div>
+<div class="content-area">
+<div id="jobContent"><div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="text-muted mt-3">Loading job details...</p></div></div>
+<div id="actionButtons" class="mt-4 d-none">
+<div class="card"><div class="card-body text-center">
+<h6 class="mb-3">Accept or Reject this Assignment</h6>
+<button class="btn btn-success btn-lg me-3" onclick="acceptJob(true)"><i class="fas fa-check me-2"></i> Accept Job</button>
+<button class="btn btn-danger btn-lg" onclick="acceptJob(false)"><i class="fas fa-times me-2"></i> Reject Job</button>
+</div></div>
+</div>
+<div id="workSection" class="mt-4 d-none">
+<div class="card mb-4"><div class="card-body">
+<h6 class="mb-3">Job Progress</h6>
+<div class="status-timeline">
+<div class="status-step completed" id="step-assigned"><div class="step-dot"></div><small>Assigned</small></div>
+<div class="status-step" id="step-accepted"><div class="step-dot"></div><small>Accepted</small></div>
+<div class="status-step" id="step-onsite"><div class="step-dot"></div><small>On Site</small></div>
+<div class="status-step" id="step-progress"><div class="step-dot"></div><small>In Progress</small></div>
+<div class="status-step" id="step-completed"><div class="step-dot"></div><small>Completed</small></div>
+</div>
+<div class="d-flex gap-2 mt-3 flex-wrap">
+<button class="btn btn-outline-primary" id="btnOnSite" onclick="updateStatus('on_site')"><i class="fas fa-map-marker-alt me-1"></i> Mark On Site</button>
+<button class="btn btn-outline-primary" id="btnInProgress" onclick="updateStatus('in_progress')"><i class="fas fa-tools me-1"></i> Mark In Progress</button>
+</div>
+</div></div>
+<div class="card mb-4"><div class="card-body">
+<h6 class="mb-3">Work Photos</h6>
+<div class="row g-3">
+<div class="col-md-6">
+<div class="photo-upload" onclick="document.getElementById('beforePhotos').click()"><i class="fas fa-camera fa-2x text-muted mb-2"></i><p class="mb-0">Upload Before Photos</p><input type="file" id="beforePhotos" multiple accept="image/*" class="d-none" onchange="uploadPhotos('before')"></div>
+<div id="beforePreview" class="row g-2 mt-2"></div>
+</div>
+<div class="col-md-6">
+<div class="photo-upload" onclick="document.getElementById('afterPhotos').click()"><i class="fas fa-camera fa-2x text-muted mb-2"></i><p class="mb-0">Upload After Photos</p><input type="file" id="afterPhotos" multiple accept="image/*" class="d-none" onchange="uploadPhotos('after')"></div>
+<div id="afterPreview" class="row g-2 mt-2"></div>
+</div>
+</div>
+</div></div>
+<div class="card mb-4"><div class="card-body">
+<h6 class="mb-3">Service Notes & Materials</h6>
+<div class="mb-3"><label class="form-label">Work Description</label><textarea class="form-control" id="serviceNotes" rows="4" placeholder="Describe work performed..."></textarea></div>
+<div class="mb-3"><label class="form-label">Labor Hours</label><input type="number" class="form-control" id="laborHours" placeholder="Hours spent" step="0.5"></div>
+<div class="mb-3"><label class="form-label">Materials Used</label><div id="materialsList"></div><button class="btn btn-outline-primary btn-sm mt-2" onclick="addMaterial()"><i class="fas fa-plus me-1"></i> Add Material</button></div>
+<button class="btn btn-primary" onclick="saveNotes()"><i class="fas fa-save me-2"></i> Save Notes</button>
+</div></div>
+<div class="card mb-4"><div class="card-body">
+<h6 class="mb-3">Customer Signature</h6>
+<p class="text-muted small mb-3">Have customer sign below to confirm work completion</p>
+<canvas id="signaturePad" class="signature-pad w-100" height="200"></canvas>
+<div class="mt-3 d-flex gap-2">
+<button class="btn btn-outline-secondary" onclick="clearSignature()"><i class="fas fa-eraser me-1"></i> Clear</button>
+<button class="btn btn-primary" onclick="saveSignature()"><i class="fas fa-save me-1"></i> Save Signature</button>
+</div>
+</div></div>
+<button class="btn btn-success btn-lg w-100 py-3" onclick="completeJob()"><i class="fas fa-check-circle me-2"></i> Complete Job & Generate Report</button>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script>
+if (!Auth.isLoggedIn() || !Auth.isTechnician()) window.location.href = '../login.html';
+const user = Auth.getUser(); if (user) document.getElementById('techName').textContent = user.name;
+const urlParams = new URLSearchParams(window.location.search); const jobId = urlParams.get('id');
+let currentJob = null, signatureCanvas, signatureCtx;
+document.getElementById('mobileMenuToggle').addEventListener('click', () => { document.querySelector('.dashboard-sidebar').classList.toggle('show'); });
+async function loadJob() { try { const response = await Auth.apiCall(`/workorders/${jobId}`); if (!response) return; const data = await response.json(); if (data.success) { currentJob = data.workOrder; renderJob(data.workOrder); } } catch (error) { console.error('Load job error:', error); showAlert('danger', 'Failed to load job'); } }
+function renderJob(job) {
+const statusBadge = { pending: 'bg-secondary', assigned: 'bg-info', accepted: 'bg-primary', on_site: 'bg-warning', in_progress: 'bg-warning', completed: 'bg-success', closed: 'bg-secondary' };
+document.getElementById('jobContent').innerHTML = `<div class="card"><div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"><div><span class="badge ${statusBadge[job.status] || 'bg-secondary'} mb-2">${job.status.replace('_', ' ').toUpperCase()}</span><h4 class="mb-0">${job.workOrderId}</h4></div><span class="badge bg-${job.priority === 'urgent' ? 'danger' : job.priority === 'high' ? 'warning' : 'info'}">${job.priority.toUpperCase()}</span></div><div class="card-body"><div class="row"><div class="col-md-6"><h6 class="text-primary mb-3">Customer Information</h6><p><i class="fas fa-user me-2 text-primary"></i><strong>${job.customerName}</strong></p><p><i class="fas fa-phone me-2 text-success"></i>${job.customerPhone || 'N/A'}</p><p><i class="fas fa-envelope me-2 text-info"></i>${job.customerEmail || 'N/A'}</p></div><div class="col-md-6"><h6 class="text-primary mb-3">Job Details</h6><p><i class="fas fa-tools me-2 text-primary"></i>${job.serviceType}</p><p><i class="fas fa-map-marker-alt me-2 text-danger"></i>${job.location}</p><p><i class="fas fa-calendar me-2 text-warning"></i>${job.dueDate ? Utils.formatDate(job.dueDate) : 'No due date'}</p></div></div><hr><h6 class="text-primary">Description</h6><p>${job.description || 'No description'}</p>${job.serviceNotes ? `<hr><h6 class="text-primary">Service Notes</h6><p>${job.serviceNotes}</p>` : ''}${job.reportGenerated ? `<hr><div class="alert alert-success"><i class="fas fa-file-pdf me-2"></i>Report generated: <a href="${job.reportUrl}" target="_blank">View Report</a></div>` : ''}</div></div>`;
+const statusOrder = ['assigned', 'accepted', 'on_site', 'in_progress', 'completed'];
+const currentIndex = statusOrder.indexOf(job.status);
+statusOrder.forEach((status, index) => { const step = document.getElementById(`step-${status}`); if (step) { step.classList.remove('completed', 'active'); if (index < currentIndex) step.classList.add('completed'); if (index === currentIndex) step.classList.add('active'); } });
+if (job.status === 'assigned') { document.getElementById('actionButtons').classList.remove('d-none'); } else if (['accepted', 'on_site', 'in_progress'].includes(job.status)) { document.getElementById('workSection').classList.remove('d-none'); initSignaturePad(); document.getElementById('serviceNotes').value = job.serviceNotes || ''; document.getElementById('laborHours').value = job.laborHours || ''; document.getElementById('btnOnSite').classList.toggle('d-none', job.status !== 'accepted'); document.getElementById('btnInProgress').classList.toggle('d-none', !['accepted', 'on_site'].includes(job.status)); } else if (job.status === 'completed') { document.getElementById('workSection').classList.remove('d-none'); document.querySelectorAll('#workSection input, #workSection textarea, #workSection button, #workSection canvas').forEach(el => { el.disabled = true; }); }
+}
+async function acceptJob(accept) { try { const response = await Auth.apiCall(`/workorders/${jobId}/accept`, { method: 'PUT', body: JSON.stringify({ accept, reason: accept ? '' : 'Unable to take job' }) }); const data = await response.json(); if (data.success) { showAlert('success', accept ? 'Job accepted!' : 'Job rejected'); loadJob(); } } catch (error) { showAlert('danger', 'Action failed'); } }
+async function updateStatus(status) { try { const response = await Auth.apiCall(`/workorders/${jobId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); const data = await response.json(); if (data.success) { showAlert('success', `Status updated to ${status.replace('_', ' ')}`); loadJob(); } } catch (error) { showAlert('danger', 'Update failed'); } }
+function initSignaturePad() { signatureCanvas = document.getElementById('signaturePad'); signatureCtx = signatureCanvas.getContext('2d'); signatureCtx.strokeStyle = '#000'; signatureCtx.lineWidth = 2; let drawing = false; const getPos = (e) => { const rect = signatureCanvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: clientX - rect.left, y: clientY - rect.top }; }; const startDraw = (e) => { drawing = true; const pos = getPos(e); signatureCtx.beginPath(); signatureCtx.moveTo(pos.x, pos.y); e.preventDefault(); }; const draw = (e) => { if (!drawing) return; const pos = getPos(e); signatureCtx.lineTo(pos.x, pos.y); signatureCtx.stroke(); e.preventDefault(); }; const stopDraw = () => { drawing = false; }; signatureCanvas.addEventListener('mousedown', startDraw); signatureCanvas.addEventListener('mousemove', draw); signatureCanvas.addEventListener('mouseup', stopDraw); signatureCanvas.addEventListener('mouseout', stopDraw); signatureCanvas.addEventListener('touchstart', startDraw); signatureCanvas.addEventListener('touchmove', draw); signatureCanvas.addEventListener('touchend', stopDraw); }
+function clearSignature() { if (signatureCtx) signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height); }
+async function saveSignature() { const signatureData = signatureCanvas.toDataURL('image/png'); try { const response = await Auth.apiCall(`/workorders/${jobId}/signature`, { method: 'PUT', body: JSON.stringify({ signature: signatureData, signedBy: currentJob.customerName }) }); const data = await response.json(); if (data.success) showAlert('success', 'Signature saved'); } catch (error) { showAlert('danger', 'Failed to save signature'); } }
+async function saveNotes() { const notes = document.getElementById('serviceNotes').value; const hours = document.getElementById('laborHours').value; try { const response = await Auth.apiCall(`/workorders/${jobId}/notes`, { method: 'PUT', body: JSON.stringify({ serviceNotes: notes, laborHours: hours }) }); const data = await response.json(); if (data.success) showAlert('success', 'Notes saved'); } catch (error) { showAlert('danger', 'Failed to save notes'); } }
+function addMaterial() { const container = document.getElementById('materialsList'); const div = document.createElement('div'); div.className = 'row g-2 mb-2'; div.innerHTML = '<div class="col-5"><input type="text" class="form-control form-control-sm material-name" placeholder="Material name"></div><div class="col-3"><input type="number" class="form-control form-control-sm material-qty" placeholder="Qty" min="1"></div><div class="col-3"><input type="number" class="form-control form-control-sm material-cost" placeholder="Cost" min="0"></div><div class="col-1"><button class="btn btn-outline-danger btn-sm w-100" onclick="this.closest('.row').remove()"><i class="fas fa-times"></i></button></div>'; container.appendChild(div); }
+async function uploadPhotos(type) { const input = document.getElementById(`${type}Photos`); const files = input.files; if (!files.length) return; showAlert('info', 'Uploading photos...'); const photos = []; for (let file of files) { const reader = new FileReader(); reader.onload = (e) => photos.push(e.target.result); await new Promise(resolve => { reader.onloadend = resolve; reader.readAsDataURL(file); }); } try { const response = await Auth.apiCall(`/workorders/${jobId}/photos`, { method: 'PUT', body: JSON.stringify({ [`${type}Photos`]: photos }) }); const data = await response.json(); if (data.success) { showAlert('success', 'Photos uploaded'); const preview = document.getElementById(`${type}Preview`); photos.forEach(url => { const div = document.createElement('div'); div.className = 'col-4'; div.innerHTML = `<img src="${url}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">`; preview.appendChild(div); }); } } catch (error) { showAlert('danger', 'Upload failed'); } }
+async function completeJob() { if (!confirm('Complete this job? A PDF report will be generated and emailed to the customer.')) return; try { const response = await Auth.apiCall(`/workorders/${jobId}/complete`, { method: 'PUT' }); const data = await response.json(); if (data.success) { showAlert('success', 'Job completed! Report generated.'); setTimeout(() => window.location.href = 'dashboard.html', 2000); } } catch (error) { showAlert('danger', 'Failed to complete job'); } }
+loadJob();
+</script>
+</body>
+</html>

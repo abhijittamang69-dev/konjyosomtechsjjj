@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs - Konjyosom Tech Technician</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .main-content { margin-left: 260px; min-height: 100vh; background: #f8f9fa; }
+        .top-bar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .content-area { padding: 2rem; }
+        .job-card { cursor: pointer; transition: all 0.3s; border-left: 4px solid transparent; }
+        .job-card:hover { transform: translateX(5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .job-card.assigned { border-left-color: #3498db; }
+        .job-card.accepted { border-left-color: #9b59b6; }
+        .job-card.on-site { border-left-color: #e67e22; }
+        .job-card.in-progress { border-left-color: #f39c12; }
+        .job-card.completed { border-left-color: #2ecc71; }
+        .status-pill { font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 20px; }
+        @media (max-width: 991px) {
+            .dashboard-sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .dashboard-sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <button class="btn btn-primary position-fixed d-lg-none" style="top: 15px; left: 15px; z-index: 1001;" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="dashboard-sidebar position-fixed top-0 start-0 h-100" style="width: 260px; z-index: 1000;">
+        <div class="sidebar-brand"><i class="fas fa-tools"></i> Technician</div>
+        <ul class="sidebar-nav">
+            <li><a href="dashboard.html" class="active"><i class="fas fa-clipboard-list"></i> My Jobs</a></li>
+            <li><a href="completed.html"><i class="fas fa-check-circle"></i> Completed</a></li>
+            <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+            <li class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);"><a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 d-none d-lg-block">My Assigned Jobs</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted"><i class="fas fa-user me-1"></i> <span id="techName">Technician</span></span>
+                <span class="badge bg-info">Technician</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="fas fa-clipboard-list"></i></div>
+                        <div class="stat-value" id="totalJobs">0</div>
+                        <div class="stat-label">Total Jobs</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-clock"></i></div>
+                        <div class="stat-value" id="pendingJobs">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-spinner"></i></div>
+                        <div class="stat-value" id="activeJobs">0</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-value" id="completedJobs">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card p-3 mb-4">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-primary active" onclick="filterJobs('all')">All</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="filterJobs('assigned')">Assigned</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="filterJobs('accepted')">Accepted</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="filterJobs('on_site')">On Site</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="filterJobs('in_progress')">In Progress</button>
+                    <button class="btn btn-sm btn-outline-success" onclick="filterJobs('completed')">Completed</button>
+                </div>
+            </div>
+
+            <!-- Jobs List -->
+            <div id="jobsList" class="row g-3">
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="text-muted mt-3">Loading your jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        if (!Auth.isLoggedIn() || !Auth.isTechnician()) window.location.href = '../login.html';
+        const user = Auth.getUser();
+        if (user) document.getElementById('techName').textContent = user.name;
+
+        document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+            document.querySelector('.dashboard-sidebar').classList.toggle('show');
+        });
+
+        let allJobs = [];
+        let currentFilter = 'all';
+
+        async function loadJobs() {
+            try {
+                const response = await Auth.apiCall('/workorders');
+                if (!response) return;
+                const data = await response.json();
+
+                if (data.success) {
+                    allJobs = data.workOrders || [];
+                    updateStats();
+                    renderJobs(allJobs);
+                }
+            } catch (error) {
+                console.error('Load jobs error:', error);
+                showAlert('danger', 'Failed to load jobs');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalJobs').textContent = allJobs.length;
+            document.getElementById('pendingJobs').textContent = allJobs.filter(j => ['assigned', 'accepted'].includes(j.status)).length;
+            document.getElementById('activeJobs').textContent = allJobs.filter(j => ['on_site', 'in_progress'].includes(j.status)).length;
+            document.getElementById('completedJobs').textContent = allJobs.filter(j => j.status === 'completed').length;
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobsList');
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No jobs found for this filter</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => `
+                <div class="col-12">
+                    <div class="card job-card ${job.status}" onclick="window.location.href='job-detail.html?id=${job._id}'">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge ${Utils.getStatusBadgeClass(job.status)} status-pill">${job.status.replace('_', ' ').toUpperCase()}</span>
+                                        <span class="badge ${Utils.getPriorityBadgeClass(job.priority)} status-pill">${job.priority.toUpperCase()}</span>
+                                        <span class="text-muted small">${job.workOrderId}</span>
+                                    </div>
+                                    <h5 class="mb-1">${job.serviceType}</h5>
+                                    <p class="mb-1 text-muted"><i class="fas fa-user me-1"></i> ${job.customerName}</p>
+                                    <p class="mb-0 text-muted"><i class="fas fa-map-marker-alt me-1 text-danger"></i> ${job.location}</p>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1 small text-muted"><i class="fas fa-calendar me-1"></i> ${job.dueDate ? Utils.formatDate(job.dueDate) : 'No due date'}</p>
+                                    ${job.status === 'assigned' ? '<span class="badge bg-warning text-dark">Action Required</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterJobs(status) {
+            currentFilter = status;
+            document.querySelectorAll('.card .btn').forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-primary');
+            });
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-primary', 'active');
+
+            if (status === 'all') {
+                renderJobs(allJobs);
+            } else {
+                renderJobs(allJobs.filter(j => j.status === status));
+            }
+        }
+
+        loadJobs();
+    </script>
+</body>
+</html>

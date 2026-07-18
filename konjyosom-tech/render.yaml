@@ -1,0 +1,58 @@
+services:
+  # Backend API Service
+  - type: web
+    name: konjyosom-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false  # Set in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: FRONTEND_URL
+        fromService:
+          name: konjyosom-frontend
+          type: static
+          property: url
+      - key: ADMIN_EMAIL
+        value: admin@konjyosomtech.com
+      - key: ADMIN_PASSWORD
+        generateValue: true
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  # Frontend Static Site
+  - type: static
+    name: konjyosom-frontend
+    runtime: static
+    plan: free
+    buildCommand: echo "Frontend ready"
+    staticPublishPath: ./frontend
+    envVars:
+      - key: API_URL
+        fromService:
+          name: konjyosom-api
+          type: web
+          property: url
+    routes:
+      - type: rewrite
+        source: /api/**
+        destination: https://konjyosom-api.onrender.com/api/**
+      - type: rewrite
+        source: /admin/**
+        destination: /admin/index.html
+      - type: rewrite
+        source: /technician/**
+        destination: /technician/index.html
+      - type: rewrite
+        source: /**
+        destination: /index.html
